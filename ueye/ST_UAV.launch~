@@ -1,0 +1,40 @@
+<launch>
+	
+	<arg name="use_rosbag" default="1" />
+
+	<group if="$(arg use_rosbag)">
+		<node
+		pkg="rosbag"
+		name="data"
+		type="play"
+		launch-prefix="xterm -e"
+		args="/media/ubuntu/23059E5365AA1082/Fly_Test_2.bag -l"
+		>
+
+		<remap from="/stereo/disparity" to="/stereo/disparity_record" />
+		<remap from="/stereo/depth" to="/stereo/depth_record" />
+		</node>
+	</group>	
+
+	<group unless="$(arg use_rosbag)">
+		<node 
+	  	pkg="ueye" 
+	  	name="ueye_camera_driver" 
+	  	type="ueye_node" 
+	  	required="true" 
+	  	output="screen">
+		<param name="exposure" value="10" />
+		<param name="image_width" value="752" />
+		<param name="image_heigth" value="480" />
+		</node>
+	</group>
+
+	<node 
+	  pkg="stereo_gpu" 
+	  name="stereo_gpu" 
+	  type="stereo_gpu_node" 
+	  required="true" 
+	  output="screen">
+	</node>
+
+</launch>
