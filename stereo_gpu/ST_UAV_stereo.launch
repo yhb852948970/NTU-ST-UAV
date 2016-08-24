@@ -5,8 +5,7 @@
 		name="data"
 		type="play"
 		launch-prefix="xterm -e"
-		args="/home/haibo/catkin_ws/src/rosbag_data/Fly_Test_1.bag -l"
-		>
+		args="/home/haibo/catkin_ws/src/rosbag_data/Fly_Test_1.bag -l">
 
 		<remap from="/stereo/disparity" to="/stereo/disparity_record" />
 		<remap from="/stereo/depth" to="/stereo/depth_record" />

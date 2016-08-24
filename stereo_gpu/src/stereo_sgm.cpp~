@@ -134,8 +134,8 @@ namespace sgm {
 
 		sgm::details::winner_takes_all((const uint16_t*)cu_res_->d_scost, (uint16_t*)cu_res_->d_left_disp, (uint16_t*)cu_res_->d_right_disp, width_, height_, disparity_size_);
 
-//		sgm::details::median_filter((uint16_t*)cu_res_->d_left_disp, (uint16_t*)cu_res_->d_median_left_disp, cu_res_->d_median_filter_buffer, width_, height_);
-//		sgm::details::median_filter((uint16_t*)cu_res_->d_right_disp, (uint16_t*)cu_res_->d_median_right_disp, cu_res_->d_median_filter_buffer, width_, height_);
+		sgm::details::median_filter((uint16_t*)cu_res_->d_left_disp, (uint16_t*)cu_res_->d_median_left_disp, cu_res_->d_median_filter_buffer, width_, height_);
+		sgm::details::median_filter((uint16_t*)cu_res_->d_right_disp, (uint16_t*)cu_res_->d_median_right_disp, cu_res_->d_median_filter_buffer, width_, height_);
 
 		sgm::details::check_consistency((uint16_t*)cu_res_->d_median_left_disp, (uint16_t*)cu_res_->d_median_right_disp, d_input_left, width_, height_);
 

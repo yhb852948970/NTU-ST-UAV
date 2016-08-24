@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <nppi.h>
 #include "libsgm.h"

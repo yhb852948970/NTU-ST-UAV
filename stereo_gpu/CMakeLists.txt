@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 2.8)
 
 project(stereo_gpu)
 
-
 find_package(CUDA REQUIRED)
 unset(CUDA_ARCH CACHE)
 set(CUDA_ARCH "-arch=sm_50" CACHE STRING "Value of the NVCC -arch option.")
@@ -54,7 +53,7 @@ IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/NTU-ST-UAV/stereo_gpu/lib/libnppc_static.a
 
 ADD_LIBRARY(nppi_static STATIC IMPORTED)
 SET_TARGET_PROPERTIES(nppi_static PROPERTIES
-IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/NTU-ST-UAV/stereo_gpu//lib/libnppi_static.a)
+IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/NTU-ST-UAV/stereo_gpu/lib/libnppi_static.a)
 
 CUDA_ADD_EXECUTABLE(stereo_gpu_node ./src/main.cpp )
 
