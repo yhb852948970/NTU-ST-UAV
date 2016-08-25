@@ -14,6 +14,12 @@ else()
 	find_package(OpenCV REQUIRED core highgui imgproc imgcodecs videoio) # 3.x
 endif()
 
+find_package(PCL REQUIRED COMPONENTS common io)
+
+include_directories(${PCL_INCLUDE_DIRS})
+link_directories(${PCL_LIBRARY_DIRS})
+add_definitions(${PCL_DEFINITIONS})
+
 find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   cv_bridge
@@ -57,7 +63,7 @@ IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/NTU-ST-UAV/stereo_gpu/lib/libnppi_static.a
 
 CUDA_ADD_EXECUTABLE(stereo_gpu_node ./src/main.cpp )
 
-TARGET_LINK_LIBRARIES(stereo_gpu_node sgm nppc_static nppi_static ${OpenCV_LIBS} ${catkin_LIBRARIES})
+TARGET_LINK_LIBRARIES(stereo_gpu_node sgm nppc_static nppi_static ${OpenCV_LIBS} ${catkin_LIBRARIES} ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES})
 
 #${CUDA_nppi_LIBRARY}
 #${CUDA_LIBRARIES}

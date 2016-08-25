@@ -1,9 +1,5 @@
 /*
-	GPU SGM stereo matching
-
-	Original from github libSGM
-	Modified by Haibo
-	Data: 20-May-2016
+	GPU SGM stereo matching with PCL in ROS
 */
 
 
@@ -14,6 +10,10 @@
 #include <sensor_msgs/image_encodings.h>
 #include <geometry_msgs/Quaternion.h>
 #include <tf/transform_broadcaster.h>
+//#include <pcl_ros/point_cloud.h>
+#include <sensor_msgs/PointCloud2.h>
+#include <pcl/ros/conversions.h>
+#include <pcl_ros/point_cloud.h>  // for the conversion
 
 //OpenCV headers
 #include <opencv2/core/core.hpp>
@@ -22,6 +22,13 @@
 #include <opencv2/calib3d/calib3d.hpp>
 #include <opencv2/contrib/contrib.hpp>
 
+//PCL headers
+//#include <pcl/visualization/cloud_viewer.h>
+#include <pcl/io/io.h>
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_types.h>
+#include <pcl/point_cloud.h>
+
 // system headers
 #include <math.h>
 #include <iterator>
@@ -29,7 +36,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
+#include <vector>
 //#include <typeinfo>
+
+#include <boost/thread/thread.hpp>
 
 #include "libsgm.h"
 
@@ -53,6 +63,7 @@ class stereo_disparity
   image_transport::Subscriber img_combine;
   image_transport::Publisher img_disparity;
   image_transport::Publisher img_depth;
+  ros::Publisher cloud_pub;
 
   cv::Size img_size;
   cv::Rect roi_left;
@@ -77,6 +88,9 @@ class stereo_disparity
 
   int disp_size;
   float depth_center;
+
+  tf::TransformBroadcaster br;
+  tf::Transform transform;
 
   public:
   stereo_disparity() : 	it(nh) {
@@ -103,14 +117,50 @@ class stereo_disparity
   img_combine = it.subscribe("/camera/image_combine", 1, &stereo_disparity::imageCallback, this);
 	img_disparity = it.advertise("/stereo/disparity", 1);
 	img_depth = it.advertise("/stereo/depth", 1);
+  cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("/stereo/cloud_raw", 1);
+  //cloud_pub = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/stereo/cloud_raw", 1);
   }
 
   ~stereo_disparity(){
   }
 
+  pcl::PointCloud<pcl::PointXYZ>::Ptr
+  convert2XYZPointCloud (const cv::Mat& depth_32F, const double maxDepth, const double minDepth) const
+  {
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
+    cloud->height = depth_32F.rows;
+    cloud->width = depth_32F.cols;
+    cloud->is_dense = false;
+    pcl::PointXYZ point;
+    cv::Point3f pointOcv;
+    //cloud->points.resize (cloud->height * cloud->width);
+
+    for (int y = 0; y < cloud->height; y++) //iteration along y on 2D image plane
+    {
+      for (int x = 0; x < cloud->width; x++) //iteration along x on 2D image plane
+      {
+            pointOcv = depth_32F.at<cv::Point3f>(y, x);
+            if (pointOcv.z < maxDepth && pointOcv.z > minDepth){
+              point.x = (float)pointOcv.x / 1000;
+              point.y = (float)pointOcv.y / 1000;
+              point.z = (float)pointOcv.z / 1000;
+            }
+            else{
+              point.x = 0.0;
+              point.y = 0.0;
+              point.z = 0.0;
+            }
+            cloud->points.push_back(point);
+            //std::cout << cloud->points.size() << std::endl;
+      }
+
+    }
+    return cloud;
+  }
+
 void imageCallback(const sensor_msgs::ImageConstPtr& msg){
 
-     int64 t = cv::getTickCount();
+//     int64 t = cv::getTickCount();
      cv_bridge::CvImagePtr cv_ptr;	// opencv Mat pointer;
 
       try{
@@ -123,7 +173,6 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg){
     	}
 
 	// cv_ptr->image   ----> Mat image in opencv
-  
   img_left = cv_ptr->image(roi_left);
   img_right = cv_ptr->image(roi_right);
   cv::remap(img_left, img_left_rect, map11, map12, cv::INTER_LINEAR);
@@ -131,20 +180,8 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg){
   img_left_half = img_left_rect(roi_half);
   img_right_half = img_right_rect(roi_half);
 
-//	cudaEvent_t start, stop;
-//	float time;
-//	cudaEventCreate(&start);
-//	cudaEventCreate(&stop);
-//	cudaEventRecord( start, 0 );
-
 	sgm::StereoSGM ssgm(img_left_half.cols, img_left_half.rows, disp_size, sgm::EXECUTE_INOUT_HOST2HOST);
 	ssgm.execute(img_left_half.data, img_right_half.data, (void**)&output.data);
-
-//	cudaEventRecord( stop, 0 );
-//	cudaEventSynchronize( stop );
-//	cudaEventElapsedTime( &time, start, stop );
-//	cudaEventDestroy( start );
-//	cudaEventDestroy( stop );
 
 	output.convertTo(output_show, CV_8U, 255/disp_size);
 
@@ -153,17 +190,33 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg){
 	bgr[2] = bgr[2] / 1000;
 	depth_center = bgr[2].at<float>(HEIGHT/4, WIDTH/2);
 
-	ROS_INFO_STREAM("depth of the center point is " << depth_center << " m." );
+	//ROS_INFO_STREAM("depth of the center point is " << depth_center << " m." );
 
 	sensor_msgs::ImagePtr disparity = cv_bridge::CvImage(std_msgs::Header(), "mono8", output_show).toImageMsg();
   img_disparity.publish(disparity);
 	sensor_msgs::ImagePtr depth = cv_bridge::CvImage(std_msgs::Header(), "32FC1",bgr[2]).toImageMsg();
   img_depth.publish(depth);
-	t = cv::getTickCount() - t;
-	ROS_INFO_STREAM("Stereo Matching time: " << t*1000/cv::getTickFrequency() << " miliseconds.");
+//	t = cv::getTickCount() - t;
+	//ROS_INFO_STREAM("Stereo Matching time: " << t*1000/cv::getTickFrequency() << " miliseconds.");
+
+// PCL
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr = convert2XYZPointCloud(depth_32F, 30000., 1500);
+  //std::cout << cloud_ptr->points << std::endl;
+
+  transform.setOrigin( tf::Vector3(0.0, 0.0, 0.0) );
+  tf::Quaternion q;
+  q.setRPY(0., 0., 0.);
+  transform.setRotation(q);
+  br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", "pcl_frame"));
+  cloud_ptr->header.frame_id = "pcl_frame";
+  sensor_msgs::PointCloud2 cloud_msg;
+  pcl::toROSMsg (*cloud_ptr, cloud_msg);
+  cloud_pub.publish(cloud_msg);
+  //std::cout << *cloud_ptr->points.end() << std::endl;
 
   }	// for imageCallback
 };	// for the class
+
 
 int main(int argc, char** argv){
 
@@ -172,4 +225,3 @@ int main(int argc, char** argv){
 	ros::spin();
 	return 0;
 }
-
