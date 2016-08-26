@@ -2,7 +2,6 @@
 	GPU SGM stereo matching with PCL in ROS
 */
 
-
 // ROS headers
 #include <ros/ros.h>
 #include <image_transport/image_transport.h>
@@ -10,7 +9,6 @@
 #include <sensor_msgs/image_encodings.h>
 #include <geometry_msgs/Quaternion.h>
 #include <tf/transform_broadcaster.h>
-//#include <pcl_ros/point_cloud.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <pcl/ros/conversions.h>
 #include <pcl_ros/point_cloud.h>  // for the conversion
@@ -38,8 +36,6 @@
 #include <iostream>
 #include <vector>
 //#include <typeinfo>
-
-#include <boost/thread/thread.hpp>
 
 #include "libsgm.h"
 
@@ -131,6 +127,8 @@ class stereo_disparity
     cloud->height = depth_32F.rows;
     cloud->width = depth_32F.cols;
     cloud->is_dense = false;
+    cloud->header.frame_id = "pcl_frame";
+
     pcl::PointXYZ point;
     cv::Point3f pointOcv;
     //cloud->points.resize (cloud->height * cloud->width);
@@ -172,47 +170,40 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg){
           	return;
     	}
 
-	// cv_ptr->image   ----> Mat image in opencv
-  img_left = cv_ptr->image(roi_left);
-  img_right = cv_ptr->image(roi_right);
-  cv::remap(img_left, img_left_rect, map11, map12, cv::INTER_LINEAR);
-  cv::remap(img_right, img_right_rect, map21, map22, cv::INTER_LINEAR);
-  img_left_half = img_left_rect(roi_half);
-  img_right_half = img_right_rect(roi_half);
+      // cv_ptr->image   ----> Mat image in opencv
+      img_left = cv_ptr->image(roi_left);
+      img_right = cv_ptr->image(roi_right);
+      cv::remap(img_left, img_left_rect, map11, map12, cv::INTER_LINEAR);
+      cv::remap(img_right, img_right_rect, map21, map22, cv::INTER_LINEAR);
+      img_left_half = img_left_rect(roi_half);
+      img_right_half = img_right_rect(roi_half);
 
-	sgm::StereoSGM ssgm(img_left_half.cols, img_left_half.rows, disp_size, sgm::EXECUTE_INOUT_HOST2HOST);
-	ssgm.execute(img_left_half.data, img_right_half.data, (void**)&output.data);
+	     sgm::StereoSGM ssgm(img_left_half.cols, img_left_half.rows, disp_size, sgm::EXECUTE_INOUT_HOST2HOST);
+       ssgm.execute(img_left_half.data, img_right_half.data, (void**)&output.data);
 
-	output.convertTo(output_show, CV_8U, 255/disp_size);
+       output.convertTo(output_show, CV_8U, 255/disp_size);
+       cv::reprojectImageTo3D(output, depth_32F, Q);
+       //cv::split(depth_32F, bgr);
+       //bgr[2] = bgr[2] / 1000;
+       //depth_center = bgr[2].at<float>(HEIGHT/4, WIDTH/2);
+       //ROS_INFO_STREAM("depth of the center point is " << depth_center << " m." );
+       pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr = convert2XYZPointCloud(depth_32F, 30000., 1500);
+       transform.setOrigin( tf::Vector3(0.0, 0.0, 0.0) );
+       tf::Quaternion q;
+       q.setRPY(0., 0., 0.);
+       transform.setRotation(q);
+       br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", "pcl_frame"));
 
-	cv::reprojectImageTo3D(output, depth_32F, Q);
-	cv::split(depth_32F, bgr);
-	bgr[2] = bgr[2] / 1000;
-	depth_center = bgr[2].at<float>(HEIGHT/4, WIDTH/2);
+       sensor_msgs::ImagePtr disparity = cv_bridge::CvImage(std_msgs::Header(), "mono8", output_show).toImageMsg();
+       img_disparity.publish(disparity);
+       sensor_msgs::ImagePtr depth = cv_bridge::CvImage(std_msgs::Header(), "32FC1",bgr[2]).toImageMsg();
+       img_depth.publish(depth);
+       sensor_msgs::PointCloud2 cloud_msg;
+       pcl::toROSMsg (*cloud_ptr, cloud_msg);
+       cloud_pub.publish(cloud_msg);
 
-	//ROS_INFO_STREAM("depth of the center point is " << depth_center << " m." );
-
-	sensor_msgs::ImagePtr disparity = cv_bridge::CvImage(std_msgs::Header(), "mono8", output_show).toImageMsg();
-  img_disparity.publish(disparity);
-	sensor_msgs::ImagePtr depth = cv_bridge::CvImage(std_msgs::Header(), "32FC1",bgr[2]).toImageMsg();
-  img_depth.publish(depth);
-//	t = cv::getTickCount() - t;
-	//ROS_INFO_STREAM("Stereo Matching time: " << t*1000/cv::getTickFrequency() << " miliseconds.");
-
-// PCL
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr = convert2XYZPointCloud(depth_32F, 30000., 1500);
-  //std::cout << cloud_ptr->points << std::endl;
-
-  transform.setOrigin( tf::Vector3(0.0, 0.0, 0.0) );
-  tf::Quaternion q;
-  q.setRPY(0., 0., 0.);
-  transform.setRotation(q);
-  br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", "pcl_frame"));
-  cloud_ptr->header.frame_id = "pcl_frame";
-  sensor_msgs::PointCloud2 cloud_msg;
-  pcl::toROSMsg (*cloud_ptr, cloud_msg);
-  cloud_pub.publish(cloud_msg);
-  //std::cout << *cloud_ptr->points.end() << std::endl;
+       //	t = cv::getTickCount() - t;
+       //ROS_INFO_STREAM("Stereo Matching time: " << t*1000/cv::getTickFrequency() << " miliseconds.");
 
   }	// for imageCallback
 };	// for the class
