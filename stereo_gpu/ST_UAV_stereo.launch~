@@ -1,7 +1,7 @@
 <launch>
 
 	<node pkg="rosbag" name="data" type="play" launch-prefix="xterm -e"
-		args="$(env HOME)/catkin_ws/src/rosbag_data/Fly_Test_1.bag -l">
+		args="$(env HOME)/catkin_ws/src/rosbag_data/ST_debugging.bag -l">
 
 		<remap from="/stereo/disparity" to="/stereo/disparity_record" />
 		<remap from="/stereo/depth" to="/stereo/depth_record" />
@@ -10,6 +10,6 @@
 
 	<node pkg="stereo_gpu" name="stereo_gpu" type="stereo_gpu_node" required="true" output="screen" />
 
-	<node pkg="rviz" type="rviz" name="pcl_viewer" args="-d $(env HOME)/catkin_ws/src/UAV-phase1/NTU_ST_UAV_P1.rviz"/>
+	<node pkg="rviz" type="rviz" name="pcl_viewer" args="-d $(env HOME)/catkin_ws/src/NTU-ST-UAV/pcl_visualization.rviz"/>
 
 </launch>

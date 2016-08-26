@@ -21,11 +21,11 @@
 #include <opencv2/contrib/contrib.hpp>
 
 //PCL headers
-//#include <pcl/visualization/cloud_viewer.h>
 #include <pcl/io/io.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
+#include <pcl/filters/statistical_outlier_removal.h>
 
 // system headers
 #include <math.h>
@@ -91,6 +91,7 @@ class stereo_disparity
   public:
   stereo_disparity() : 	it(nh) {
 	output = cv::Mat::zeros(HEIGHT/2,WIDTH, CV_8UC1);
+	//output = cv::Mat::zeros(HEIGHT,WIDTH, CV_8UC1);
 	roi_left = cv::Rect(0, 0, WIDTH, HEIGHT);
 	roi_right = cv::Rect(WIDTH, 0, WIDTH, HEIGHT);
 	roi_half = cv::Rect(0, HEIGHT/4, WIDTH, HEIGHT/2);
@@ -125,6 +126,7 @@ class stereo_disparity
   convert2XYZPointCloud (const cv::Mat& depth_32F, const double maxDepth, const double minDepth) const
   {
     	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
+	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered (new pcl::PointCloud<pcl::PointXYZ>);
     	cloud->height = depth_32F.rows;
     	cloud->width = depth_32F.cols;
     	cloud->is_dense = false;
@@ -155,7 +157,14 @@ class stereo_disparity
             	//std::cout << cloud->points.size() << std::endl;
      	}
     	}
-    	return cloud;
+	
+	// Create the filtering object
+  	pcl::StatisticalOutlierRemoval<pcl::PointXYZ> sor;
+  	sor.setInputCloud (cloud);
+  	sor.setMeanK (50);
+  	sor.setStddevMulThresh (1.0);
+  	sor.filter (*cloud_filtered);
+    	return cloud_filtered;
   }
 
   void imageCallback(const sensor_msgs::ImageConstPtr& msg){
@@ -179,6 +188,8 @@ class stereo_disparity
       	cv::remap(img_right, img_right_rect, map21, map22, cv::INTER_LINEAR);
       	img_left_half = img_left_rect(roi_half);
       	img_right_half = img_right_rect(roi_half);
+	//img_left_half = img_left_rect;
+	//img_right_half = img_right_rect;
 	
 	sgm::StereoSGM ssgm(img_left_half.cols, img_left_half.rows, disp_size, sgm::EXECUTE_INOUT_HOST2HOST);
        	ssgm.execute(img_left_half.data, img_right_half.data, (void**)&output.data);
