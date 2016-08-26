@@ -96,25 +96,26 @@ class stereo_disparity
 	roi_half = cv::Rect(0, HEIGHT/4, WIDTH, HEIGHT/2);
 	img_size = cv::Size(WIDTH, HEIGHT);
 
-  M1= cv::Mat(3, 3, CV_64FC1, &M_1);
-  M2 = cv::Mat(3, 3, CV_64FC1, &M_2);
-  D1 = cv::Mat(1, 4, CV_64FC1, &D_1);
-  D2 = cv::Mat(1, 4, CV_64FC1, &D_2);
-  R = cv::Mat(3, 3, CV_64FC1, &r_data);
-  T = cv::Mat(3, 1, CV_64FC1, &t_data);
+  	M1= cv::Mat(3, 3, CV_64FC1, &M_1);
+  	M2 = cv::Mat(3, 3, CV_64FC1, &M_2);
+  	D1 = cv::Mat(1, 4, CV_64FC1, &D_1);
+  	D2 = cv::Mat(1, 4, CV_64FC1, &D_2);
+  	R = cv::Mat(3, 3, CV_64FC1, &r_data);
+  	T = cv::Mat(3, 1, CV_64FC1, &t_data);
 
 	disp_size = 64;
-	depth_center = 0;
+	//depth_center = 0;
 
 	cv::stereoRectify( M1, D1, M2, D2, img_size, R, T, R1, R2, P1, P2, Q, cv::CALIB_ZERO_DISPARITY, 0, img_size, &roi1, &roi2 );
 	cv::initUndistortRectifyMap(M1, D1, R1, P1, img_size, CV_16SC2, map11, map12);
 	cv::initUndistortRectifyMap(M2, D2, R2, P2, img_size, CV_16SC2, map21, map22);
-//std::cout << "Q = " << Q << std::endl;
-  img_combine = it.subscribe("/camera/image_combine", 1, &stereo_disparity::imageCallback, this);
+	//std::cout << "Q = " << Q << std::endl;
+
+	img_combine = it.subscribe("/camera/image_combine", 1, &stereo_disparity::imageCallback, this);
 	img_disparity = it.advertise("/stereo/disparity", 1);
 	img_depth = it.advertise("/stereo/depth", 1);
-  cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("/stereo/cloud_raw", 1);
-  //cloud_pub = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/stereo/cloud_raw", 1);
+  	cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("/stereo/cloud_raw", 1);
+  	//cloud_pub = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/stereo/cloud_raw", 1);
   }
 
   ~stereo_disparity(){
@@ -123,70 +124,71 @@ class stereo_disparity
   pcl::PointCloud<pcl::PointXYZ>::Ptr
   convert2XYZPointCloud (const cv::Mat& depth_32F, const double maxDepth, const double minDepth) const
   {
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
-    cloud->height = depth_32F.rows;
-    cloud->width = depth_32F.cols;
-    cloud->is_dense = false;
-    cloud->header.frame_id = "pcl_frame";
+    	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
+    	cloud->height = depth_32F.rows;
+    	cloud->width = depth_32F.cols;
+    	cloud->is_dense = false;
+    	cloud->header.frame_id = "pcl_frame";
 
-    pcl::PointXYZ point;
-    cv::Point3f pointOcv;
-    //cloud->points.resize (cloud->height * cloud->width);
+   	 pcl::PointXYZ point;
+   	 cv::Point3f pointOcv;
+    	//cloud->points.resize (cloud->height * cloud->width);
 
-    for (int y = 0; y < cloud->height; y++) //iteration along y on 2D image plane
-    {
-      for (int x = 0; x < cloud->width; x++) //iteration along x on 2D image plane
-      {
-            pointOcv = depth_32F.at<cv::Point3f>(y, x);
-            if (pointOcv.z < maxDepth && pointOcv.z > minDepth){
-              point.x = (float)pointOcv.x / 1000;
-              point.y = (float)pointOcv.y / 1000;
-              point.z = (float)pointOcv.z / 1000;
-            }
-            else{
-              point.x = 0.0;
-              point.y = 0.0;
-              point.z = 0.0;
-            }
-            cloud->points.push_back(point);
-            //std::cout << cloud->points.size() << std::endl;
-      }
+    	for (int y = 0; y < cloud->height; y++){ //iteration along y on 2D image plane
+      	for (int x = 0; x < cloud->width; x++){ //iteration along x on 2D image plane
+           	
+		pointOcv = depth_32F.at<cv::Point3f>(y, x);
 
-    }
-    return cloud;
+            	if (pointOcv.z < maxDepth && pointOcv.z > minDepth){
+              		point.x = (float)pointOcv.x / 1000;
+              		point.y = (float)pointOcv.y / 1000;
+              		point.z = (float)pointOcv.z / 1000;
+            	}
+
+            	else{
+              		point.x = 0.0;
+              		point.y = 0.0;
+              		point.z = 0.0;
+            	}
+
+            	cloud->points.push_back(point);
+            	//std::cout << cloud->points.size() << std::endl;
+     	}
+    	}
+    	return cloud;
   }
 
-void imageCallback(const sensor_msgs::ImageConstPtr& msg){
+  void imageCallback(const sensor_msgs::ImageConstPtr& msg){
 
-//     int64 t = cv::getTickCount();
-     cv_bridge::CvImagePtr cv_ptr;	// opencv Mat pointer;
+	//int64 t = cv::getTickCount();
+     	cv_bridge::CvImagePtr cv_ptr;	// opencv Mat pointer;
 
-      try{
-        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::TYPE_8UC1);
-      }
+      	try{
+        	cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::TYPE_8UC1);
+      	}
 
-      catch (cv_bridge::Exception& e) {
+      	catch (cv_bridge::Exception& e) {
       	  	ROS_ERROR("cv_bridge exception: %s", e.what());
           	return;
     	}
 
-      // cv_ptr->image   ----> Mat image in opencv
-      img_left = cv_ptr->image(roi_left);
-      img_right = cv_ptr->image(roi_right);
-      cv::remap(img_left, img_left_rect, map11, map12, cv::INTER_LINEAR);
-      cv::remap(img_right, img_right_rect, map21, map22, cv::INTER_LINEAR);
-      img_left_half = img_left_rect(roi_half);
-      img_right_half = img_right_rect(roi_half);
+      	// cv_ptr->image   ----> Mat image in opencv
+      	img_left = cv_ptr->image(roi_left);
+      	img_right = cv_ptr->image(roi_right);
+      	cv::remap(img_left, img_left_rect, map11, map12, cv::INTER_LINEAR);
+      	cv::remap(img_right, img_right_rect, map21, map22, cv::INTER_LINEAR);
+      	img_left_half = img_left_rect(roi_half);
+      	img_right_half = img_right_rect(roi_half);
+	
+	sgm::StereoSGM ssgm(img_left_half.cols, img_left_half.rows, disp_size, sgm::EXECUTE_INOUT_HOST2HOST);
+       	ssgm.execute(img_left_half.data, img_right_half.data, (void**)&output.data);
 
-	     sgm::StereoSGM ssgm(img_left_half.cols, img_left_half.rows, disp_size, sgm::EXECUTE_INOUT_HOST2HOST);
-       ssgm.execute(img_left_half.data, img_right_half.data, (void**)&output.data);
-
-       output.convertTo(output_show, CV_8U, 255/disp_size);
-       cv::reprojectImageTo3D(output, depth_32F, Q);
-       //cv::split(depth_32F, bgr);
-       //bgr[2] = bgr[2] / 1000;
-       //depth_center = bgr[2].at<float>(HEIGHT/4, WIDTH/2);
-       //ROS_INFO_STREAM("depth of the center point is " << depth_center << " m." );
+       	output.convertTo(output_show, CV_8U, 255/disp_size);
+       	cv::reprojectImageTo3D(output, depth_32F, Q);
+       	//cv::split(depth_32F, bgr);
+       	//bgr[2] = bgr[2] / 1000;
+       	//depth_center = bgr[2].at<float>(HEIGHT/4, WIDTH/2);
+       	//ROS_INFO_STREAM("depth of the center point is " << depth_center << " m." );
        pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr = convert2XYZPointCloud(depth_32F, 30000., 1500);
        transform.setOrigin( tf::Vector3(0.0, 0.0, 0.0) );
        tf::Quaternion q;

@@ -1,22 +1,16 @@
 #include "ueye_camera.h"
 #include "ueye_exceptions.h"
 #include "exceptions.h"
-#include <opencv2/core/core.hpp>
-#include "iostream"
+#include <iostream>
 #include <string>
 #include <sstream>
-#include "opencv2/calib3d/calib3d.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
-#include "opencv2/highgui/highgui.hpp"
-#include "opencv2/contrib/contrib.hpp"
-#include "opencv2/photo/photo.hpp"
 #include <stdlib.h>
-
 #include <stdio.h>
+#include <opencv2/core/core.hpp>
+#include "opencv2/highgui/highgui.hpp"
 
 #include <ros/ros.h>
 #include <image_transport/image_transport.h>
-#include <opencv2/highgui/highgui.hpp>
 #include <cv_bridge/cv_bridge.h>
 
 using namespace std;
@@ -124,7 +118,6 @@ bool list_cameras()
   return true;
 }
 
-
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "ueye_node");
@@ -178,10 +171,9 @@ int main(int argc, char** argv)
   cv::Mat* frame_R;
   Mat img1;
   Mat img2;
-  Mat img3;//combined image
+  Mat img3;
 
   ros::Rate loop_rate(20);
-  int64 t = getTickCount();
   ueye.Enable_Event();
   ueye_R.Enable_Event();
 
@@ -196,11 +188,8 @@ int main(int argc, char** argv)
     ueye_R.getExposure();
     std::cout<<"ueye.input_exposure"<<ueye.input_exposure<<std::endl;
     std::cout<<"ueye_R.input_exposure"<<ueye_R.input_exposure<<std::endl;
+    std::cout<<"gain"<<ueye.get_hardware_gain()<<" "<<ueye_R.get_hardware_gain()<<std::endl;
 */
-
-    //std::cout<<"exposure"<<ueye.input_exposure<<" "<<ueye_R.input_exposure<<std::endl;    
-    //std::cout<<"gain"<<ueye.get_hardware_gain()<<" "<<ueye_R.get_hardware_gain()<<std::endl;
-
  
     ueye_R.get_hardware_gain();
     int gain = ueye.get_hardware_gain();
@@ -209,14 +198,10 @@ int main(int argc, char** argv)
     int flag1 = ueye.Wait_next_image();
     int flag2 = ueye_R.Wait_next_image();
 
-   // std::cout<<flag1<<flag2<<std::endl;
+    frame_L = get_img(ueye);
+    frame_R = get_img(ueye_R);
 
-  //  if(flag1&&flag2)
-  //  {
-    frame_L                              = get_img(ueye);
-    frame_R                              = get_img(ueye_R);
-    if(frame_L!=NULL && frame_R!=NULL &&  flag1 && flag2)
-    {
+    if(frame_L!=NULL && frame_R!=NULL &&  flag1 && flag2){
 
 	img1 = *frame_L;
 	cvtColor(img1,img1,CV_RGB2GRAY);
@@ -242,11 +227,9 @@ int main(int argc, char** argv)
 	frame_L->release();
 	frame_R->release();
 
-        t  = getTickCount() - t;
-       // std::cout<<"Stereo Matching frequency: " << getTickFrequency()/t<<std::endl;
     }
     else{
-        ROS_INFO_STREAM("LOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOST");
+        ROS_INFO_STREAM("Frame lost!");
     }
 
     ros::spinOnce();

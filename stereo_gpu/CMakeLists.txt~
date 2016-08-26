@@ -16,7 +16,6 @@ endif()
 
 find_package(PCL REQUIRED COMPONENTS common io)
 
-include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 
@@ -38,8 +37,7 @@ catkin_package(
    DEPENDS system_lib
 )
 
-include_directories(include ${catkin_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS})
-
+include_directories(include ${catkin_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS} ${PCL_INCLUDE_DIRS})
 
 SET(DOTCU
 	src/census.cu
@@ -65,5 +63,3 @@ CUDA_ADD_EXECUTABLE(stereo_gpu_node ./src/main.cpp )
 
 TARGET_LINK_LIBRARIES(stereo_gpu_node sgm nppc_static nppi_static ${OpenCV_LIBS} ${catkin_LIBRARIES} ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES})
 
-#${CUDA_nppi_LIBRARY}
-#${CUDA_LIBRARIES}

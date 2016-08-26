@@ -1,4 +1,4 @@
-#include "disparity/ueye_exceptions.h"
+#include "ueye_exceptions.h"
 #include <sstream>
 #include <string.h>
 #include <stdio.h>

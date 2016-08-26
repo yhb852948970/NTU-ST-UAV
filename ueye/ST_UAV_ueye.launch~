@@ -1,40 +1,14 @@
 <launch>
-	
-	<arg name="use_rosbag" default="1" />
 
-	<group if="$(arg use_rosbag)">
-		<node
-		pkg="rosbag"
-		name="data"
-		type="play"
-		launch-prefix="xterm -e"
-		args="/home/ubuntu/catkin_ws/src/ST_ROS/Fly_Test_1.bag -l"
-		>
-
-		<remap from="/stereo/disparity" to="/stereo/disparity_record" />
-		<remap from="/stereo/depth" to="/stereo/depth_record" />
-		</node>
-	</group>	
-
-	<group unless="$(arg use_rosbag)">
-		<node 
-	  	pkg="ueye" 
-	  	name="ueye_camera_driver" 
-	  	type="ueye_node" 
-	  	required="true" 
-	  	output="screen">
+	<node pkg="ueye" name="ueye_camera_driver" type="ueye_node" required="true" output="screen">
 		<param name="exposure" value="10" />
 		<param name="image_width" value="752" />
 		<param name="image_heigth" value="480" />
-		</node>
-	</group>
-
-	<node 
-	  pkg="stereo_gpu" 
-	  name="stereo_gpu" 
-	  type="stereo_gpu_node" 
-	  required="true" 
-	  output="screen">
 	</node>
+
+	<node pkg="stereo_gpu" name="stereo_gpu" type="stereo_gpu_node" required="true" output="screen" />
+	
+	<node pkg="rviz" type="rviz" name="pcl_viewer" args="-d $(env HOME)/catkin_ws/src/NTU-ST-UAV/pcl_visualization.rviz"/>
+
 
 </launch>
