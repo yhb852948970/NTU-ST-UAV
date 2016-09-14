@@ -25,7 +25,7 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
-#include <pcl/filters/statistical_outlier_removal.h>
+//#include <pcl/filters/statistical_outlier_removal.h>
 
 // system headers
 #include <math.h>
@@ -126,7 +126,6 @@ class stereo_disparity
   convert2XYZPointCloud (const cv::Mat& depth_32F, const double maxDepth, const double minDepth) const
   {
     	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
-	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered (new pcl::PointCloud<pcl::PointXYZ>);
     	cloud->height = depth_32F.rows;
     	cloud->width = depth_32F.cols;
     	cloud->is_dense = false;
@@ -157,15 +156,8 @@ class stereo_disparity
             	//std::cout << cloud->points.size() << std::endl;
      	}
     	}
-	
-	// Create the filtering object
-  	pcl::StatisticalOutlierRemoval<pcl::PointXYZ> sor;
-  	sor.setInputCloud (cloud);
-  	sor.setMeanK (50);
-  	sor.setStddevMulThresh (1.0);
-  	sor.filter (*cloud_filtered);
 
-    	return cloud_filtered;
+    	return cloud;
   }
 
   void imageCallback(const sensor_msgs::ImageConstPtr& msg){

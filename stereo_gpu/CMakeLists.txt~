@@ -61,5 +61,5 @@ IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/NTU-ST-UAV/stereo_gpu/lib/libnppi_static.a
 
 CUDA_ADD_EXECUTABLE(stereo_gpu_node ./src/main.cpp )
 
-TARGET_LINK_LIBRARIES(stereo_gpu_node sgm nppc_static nppi_static ${OpenCV_LIBS} ${catkin_LIBRARIES} ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES})
+TARGET_LINK_LIBRARIES(stereo_gpu_node sgm nppc_static nppi_static ${OpenCV_LIBS} ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 
