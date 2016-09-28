@@ -28,8 +28,12 @@ find_package(catkin REQUIRED COMPONENTS
   image_transport
   sensor_msgs
 )
+catkin_destinations()
 
 FIND_PACKAGE(iriutils REQUIRED)
+
+# Declare a catkin package
+catkin_package()
 
 SET(sources src/ueye_camera.cpp src/ueye_exceptions.cpp)
 SET(headers include/ueye_camera.h include/ueye_exceptions.h)
@@ -92,6 +96,6 @@ endif()
 
 include_directories(include ${catkin_INCLUDE_DIRS})
 add_executable(ueye_node src/ueye_node.cpp)
-target_link_libraries(ueye_node ${catkin_LIBRARIES} ${OpenCV_LIBS} ueye_camera )
+target_link_libraries(ueye_node ${catkin_LIBRARIES} ${OpenCV_LIBS} ueye_camera)
 add_dependencies(ueye_node ueye_cpp)
 

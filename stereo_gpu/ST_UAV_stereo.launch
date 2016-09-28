@@ -1,7 +1,7 @@
 <launch>
 
 	<node pkg="rosbag" name="data" type="play" launch-prefix="xterm -e"
-		args="$(env HOME)/catkin_ws/src/rosbag_data/Fly_Test_2.bag -l">
+		args="$(env HOME)/catkin_ws/src/rosbag_data/Fly_Test_1.bag -l">
 
 		<remap from="/stereo/disparity" to="/stereo/disparity_record" />
 		<remap from="/stereo/depth" to="/stereo/depth_record" />

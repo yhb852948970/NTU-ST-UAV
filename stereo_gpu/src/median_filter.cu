@@ -26,7 +26,7 @@ namespace sgm {
 		void median_filter(const uint16_t* d_src, uint16_t* d_dst, void* median_filter_buffer, int width, int height) {
 
 			NppiSize roi = { width, height };
-			NppiSize mask = { 5, 5 }; // {3, 3}
+			NppiSize mask = { 3, 3 }; // {3, 3}
 			NppiPoint anchor = { 0, 0 };
 
 			NppStatus status = nppiFilterMedian_16u_C1R(d_src, sizeof(Npp16u) * width, d_dst, sizeof(Npp16u) * width, roi, mask, anchor, (Npp8u*)median_filter_buffer);

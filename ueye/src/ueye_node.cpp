@@ -13,6 +13,8 @@
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
 
+#include <boost/thread.hpp>
+
 using namespace std;
 using namespace cv;
 
@@ -20,6 +22,7 @@ using namespace cv;
 CUeye_Camera ueye;
 CUeye_Camera ueye_R;
 
+/*
 // GET IMAGE
 //-----------------------------------------------------------------------------
 cv::Mat* get_img(CUeye_Camera& cam)
@@ -57,6 +60,49 @@ cv::Mat* get_img(CUeye_Camera& cam)
   }
 
   return image;
+}
+*/
+
+
+// GET IMAGE for multithread
+//-----------------------------------------------------------------------------
+void get_img_thread(CUeye_Camera& cam, cv::Mat** rImage)
+{
+  // Aacquire a single image from the camera
+  bool image_ok = false;
+  try
+  {
+    image_ok = cam.get_image();
+  }
+  catch (CUeyeCameraException & e)
+  {
+    cout << e.what () << endl;
+    return;
+  }
+  catch (CUeyeFeatureException & e)
+  {
+    cout << e.what () << endl;
+  }
+
+  int type;
+  if(cam.params_.img_bpp ==8) 
+	type=CV_8UC1;
+  else if(cam.params_.img_bpp ==24 || cam.params_.img_bpp==32)
+	type=CV_8UC3;
+
+  cv::Mat* image = NULL;
+
+  if(image_ok)
+  {
+    image = new cv::Mat(cam.params_.img_height, cam.params_.img_width, type);
+
+    for (int jj = 0; jj < cam.img_data_size_; ++jj)
+      image->at<unsigned char>(jj) = (unsigned char)cam.image_data_.at(jj);
+  }
+ 
+  *rImage = image;
+//std::cout <<"Address of rImage: " << &rImage << std::endl;
+  return;
 }
 
 // INITIALIZE CAMERA
@@ -179,13 +225,13 @@ int main(int argc, char** argv)
 
   while (nh.ok()) {
 
-    ueye.getExposure();
-    ueye_R.getExposure();
+    ueye.get_Exposure();
+    ueye_R.get_Exposure();
 
 /*
-    ueye.getExposure();
+    ueye.get_Exposure();
     ueye_R.set_exposure(ueye.input_exposure);
-    ueye_R.getExposure();
+    ueye_R.get_Exposure();
     std::cout<<"ueye.input_exposure"<<ueye.input_exposure<<std::endl;
     std::cout<<"ueye_R.input_exposure"<<ueye_R.input_exposure<<std::endl;
     std::cout<<"gain"<<ueye.get_hardware_gain()<<" "<<ueye_R.get_hardware_gain()<<std::endl;
@@ -196,12 +242,20 @@ int main(int argc, char** argv)
     ueye_R.set_hardware_gain(gain);
 
     int flag1 = ueye.Wait_next_image();
-    int flag2 = ueye_R.Wait_next_image();
+//    int flag2 = ueye_R.Wait_next_image();
+//    frame_L = get_img(ueye);
+//    frame_R = get_img(ueye_R);
 
-    frame_L = get_img(ueye);
-    frame_R = get_img(ueye_R);
 
-    if(frame_L!=NULL && frame_R!=NULL &&  flag1 && flag2){
+boost::thread thread_1 = boost::thread(get_img_thread, ueye, &frame_L);
+boost::thread thread_2 = boost::thread(get_img_thread, ueye_R, &frame_R);
+thread_2.join();
+thread_1.join();
+//std::cout << "Address of frame_L: "<< frame_L << std::endl;
+//std::cout << "Frame_L: "<< frame_L << std::endl;
+
+
+    if(frame_L!=NULL && frame_R!=NULL &&  flag1 ){
 
 	img1 = *frame_L;
 	cvtColor(img1,img1,CV_RGB2GRAY);
