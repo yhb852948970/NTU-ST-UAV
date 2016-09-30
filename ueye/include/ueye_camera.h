@@ -3,6 +3,9 @@
 
 #include <uEye.h>
 #include "ueye_exceptions.h"
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <boost/thread.hpp>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -246,4 +249,11 @@ class CUeye_Camera
     void close_camera();
 };
 
+// My own function
+//----------------------------------------------------------
+//cv::Mat* get_img(CUeye_Camera& cam);
+void get_img_thread(CUeye_Camera& cam, cv::Mat** rImage);
+//bool init_camera();
+//bool list_cameras();
+void image_save(const cv::Mat &img1, const cv::Mat &img2);
 #endif

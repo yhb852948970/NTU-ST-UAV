@@ -48,35 +48,12 @@
 #define WIDTH 752
 #define HEIGHT 480
 
-// calibration parameters for phase 1
-/*
-double r_data[9] = {0.999851516004708, -0.00498457045275044, 0.0164954539340047, 0.00497160703876063, 0.999987299688415, 0.000826792189086883, -0.0164993656405163, -0.000744660508793523, 0.999863598904464};
-double t_data[3] = {-299.268590358311,	-0.641667329520781,	1.09821941809761};
-double M_1[9] = { 421.199009407044, 0.412760990698931, 366.699973333038, 0, 421.655468122576,  239.600056673828, 0, 0, 1 };
-double M_2[9] = {423.526696160263, -0.123652334236988, 375.431005950529, 0, 423.751038507976, 237.088401774212, 0, 0, 1  };
-double D_1[4] = {-0.307057933010874,	0.120679939434720, -0.000340441435229576,	-0.000347173827361101};
-double D_2[4] = {-0.306923298818246,	0.121786424922333, -0.000810100722834597,	0.000975575619740761};
-*/
-
-// calibration parameters for phase 2
-/*
-double r_data[9] = {0.9999, -0.0046, 0.0121, 0.0046, 1.0000, 3.0773e-05, -0.0121, 2.4477e-05, 0.9999};
-double t_data[3] = {-299.6673, -0.6989, 0.8910};
-double M_1[9] = {422.3434, 0, 367.0643, 0, 424.1456, 239.2039, 0, 0, 1};
-double M_2[9] = {422.8866, 0, 375.8028, 0, 424.5540, 236.9546, 0, 0, 1};
-double D_1[4] = {-0.3125, 0.1315,1.5393e-04, 1.7118e-04};
-double D_2[4] = {-0.3180, 0.1338, -9.3738e-04, -3.8094e-04};
-*/
-
-// calibration parameters for phase 2 second time
-
-double r_data[9] = {0.999768041738478, -0.004531400850643, 0.021055382322316, 0.004460955044025, 0.999984298667156, 0.003391503980761, -0.021070419988774, -0.003296790179419, 0.999772558423169};
-double t_data[3] = {-2.990303428835856e+02, -0.795681282720240, 5.147247578787574};
-double M_1[9] = {4.204837658358183e+02, 0.157642344180078, 3.669852285911345e+02, 0, 4.222438021042595e+02, 2.371309355964452e+02, 0, 0, 1};
-double M_2[9] = {4.236593090834410e+02, -0.071534145784020, 3.745443404258647e+02, 0, 4.251629968680019e+02, 2.341632373237902e+02, 0, 0, 1};
-double D_1[5] = {-0.309689795584489,0.125561797866391, 3.813715796117815e-04,2.573637904590803e-04, -0.027579720792610};
-double D_2[5] = {-0.314535714794843,0.135064041054427, 7.267951253382830e-05,0.001168993329273, -0.032756739872283 };
-
+double r_data[9] = {	0.999869085748125, -0.005390380207778, 0.015256315624197, 0.005380773755080, 0.999985298644059, 6.706486037032410e-04, -0.015259706386630, -5.884700235331059e-04, 0.999883390733152};
+double t_data[3] = {-2.997493527781123e+02,-0.652091851538177,2.153642301837196};
+double M_1[9] = {4.229179410595286e+02, 0.014313559116982, 3.657902748321415e+02, 0, 4.245942224546713e+02, 2.378417928424143e+02, 0, 0, 1 };
+double M_2[9] = {4.243355006950268e+02, 0.162619548606052, 3.762657866679956e+02, 0, 4.261813872638455e+02, 2.361768388068374e+02, 0, 0, 1};
+double D_1[5] = {-0.310266312281967,0.123131099544115,5.140978207209692e-04,4.359861887949068e-04, -0.026795203831160};
+double D_2[5] = {-0.317295992415919,0.135591053622665, 4.095224889332796e-05,3.238947661482718e-04, -0.032648223811825};
 
 class stereo_disparity
 {
@@ -121,8 +98,8 @@ int count_imwrite;
 
   public:
   stereo_disparity() : 	it(nh) {
-	output = cv::Mat::zeros(HEIGHT/2,WIDTH, CV_8UC1);
-	//output = cv::Mat::zeros(HEIGHT,WIDTH, CV_8UC1);
+	//output = cv::Mat::zeros(HEIGHT/2,WIDTH, CV_8UC1); // half image
+	output = cv::Mat::zeros(HEIGHT,WIDTH, CV_8UC1); // original image
 	roi_left = cv::Rect(0, 0, WIDTH, HEIGHT);
 	roi_right = cv::Rect(WIDTH, 0, WIDTH, HEIGHT);
 	roi_half = cv::Rect(0, HEIGHT/4, WIDTH, HEIGHT/2);
@@ -246,10 +223,14 @@ int count_imwrite;
       	img_right = cv_ptr->image(roi_right);
       	cv::remap(img_left, img_left_rect, map11, map12, cv::INTER_LINEAR);
       	cv::remap(img_right, img_right_rect, map21, map22, cv::INTER_LINEAR);
-      	img_left_half = img_left_rect(roi_half);
-      	img_right_half = img_right_rect(roi_half);
-	//img_left_half = img_left_rect;
-	//img_right_half = img_right_rect;
+
+	/* use half image  */    	
+	//img_left_half = img_left_rect(roi_half);
+      	//img_right_half = img_right_rect(roi_half);
+
+	/* use full image  */ 
+	img_left_half = img_left_rect;
+	img_right_half = img_right_rect;
 
 /* //imwrite to save rectified images
 count_imwrite++;
@@ -257,8 +238,8 @@ std::string Result;
 std::ostringstream convert;
 convert << count_imwrite;
 Result = convert.str();
-std::string filename1 = "/home/haibo/Desktop/ST/Left/" + Result + "_1.png";
-std::string filename2 = "/home/haibo/Desktop/ST/Right/" + Result + "_2.png";
+std::string filename1 = "/home/haibo/Desktop/Rectify/Left/" + Result + "_1.png";
+std::string filename2 = "/home/haibo/Desktop/Rectify/Right/" + Result + "_2.png";
 cv::imwrite(filename1.c_str(), img_left_half);
 cv::imwrite(filename2.c_str(), img_right_half);
 //end of imwrite */ 

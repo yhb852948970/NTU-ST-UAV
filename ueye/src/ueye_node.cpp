@@ -22,89 +22,6 @@ using namespace cv;
 CUeye_Camera ueye;
 CUeye_Camera ueye_R;
 
-/*
-// GET IMAGE
-//-----------------------------------------------------------------------------
-cv::Mat* get_img(CUeye_Camera& cam)
-{
-  // Aacquire a single image from the camera
-  bool image_ok = false;
-  try
-  {
-    image_ok = cam.get_image();
-  }
-  catch (CUeyeCameraException & e)
-  {
-    cout << e.what () << endl;
-    return 0;
-  }
-  catch (CUeyeFeatureException & e)
-  {
-    cout << e.what () << endl;
-  }
-
-  int type;
-  if(cam.params_.img_bpp ==8) 
-	type=CV_8UC1;
-  else if(cam.params_.img_bpp ==24 || cam.params_.img_bpp==32)
-	type=CV_8UC3;
-
-  cv::Mat* image = NULL;
-
-  if(image_ok)
-  {
-    image = new cv::Mat(cam.params_.img_height, cam.params_.img_width, type);
-
-    for (int jj = 0; jj < cam.img_data_size_; ++jj)
-      image->at<unsigned char>(jj) = (unsigned char)cam.image_data_.at(jj);
-  }
-
-  return image;
-}
-*/
-
-
-// GET IMAGE for multithread
-//-----------------------------------------------------------------------------
-void get_img_thread(CUeye_Camera& cam, cv::Mat** rImage)
-{
-  // Aacquire a single image from the camera
-  bool image_ok = false;
-  try
-  {
-    image_ok = cam.get_image();
-  }
-  catch (CUeyeCameraException & e)
-  {
-    cout << e.what () << endl;
-    return;
-  }
-  catch (CUeyeFeatureException & e)
-  {
-    cout << e.what () << endl;
-  }
-
-  int type;
-  if(cam.params_.img_bpp ==8) 
-	type=CV_8UC1;
-  else if(cam.params_.img_bpp ==24 || cam.params_.img_bpp==32)
-	type=CV_8UC3;
-
-  cv::Mat* image = NULL;
-
-  if(image_ok)
-  {
-    image = new cv::Mat(cam.params_.img_height, cam.params_.img_width, type);
-
-    for (int jj = 0; jj < cam.img_data_size_; ++jj)
-      image->at<unsigned char>(jj) = (unsigned char)cam.image_data_.at(jj);
-  }
- 
-  *rImage = image;
-//std::cout <<"Address of rImage: " << &rImage << std::endl;
-  return;
-}
-
 // INITIALIZE CAMERA
 // -----------------------------------------------------------------------------
 bool init_camera()
@@ -251,8 +168,6 @@ boost::thread thread_1 = boost::thread(get_img_thread, ueye, &frame_L);
 boost::thread thread_2 = boost::thread(get_img_thread, ueye_R, &frame_R);
 thread_2.join();
 thread_1.join();
-//std::cout << "Address of frame_L: "<< frame_L << std::endl;
-//std::cout << "Frame_L: "<< frame_L << std::endl;
 
 
     if(frame_L!=NULL && frame_R!=NULL &&  flag1 ){
@@ -266,9 +181,13 @@ thread_1.join();
   	imshow("img2",img2);
   	char button=waitKey(1);
 
-  	if (button == 'a'){
+  	if (button == 'a' || button == 'A'){
 		std::cout<<"exposure"<<ueye.input_exposure<<" "<<ueye_R.input_exposure<<std::endl;    
     		std::cout<<"gain"<<ueye.get_hardware_gain()<<" "<<ueye_R.get_hardware_gain()<<std::endl;
+	}
+
+	if (button == 's' || button == 'S'){
+		image_save(img1, img2);
 	}
 
 	msg1 = cv_bridge::CvImage(std_msgs::Header(), "mono8", img1).toImageMsg();
