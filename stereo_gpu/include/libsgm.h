@@ -2,7 +2,8 @@
 	libsgm.h
 */
 
-#pragma once
+#ifndef _LIBSGM_H
+#define _LIBSGM_H
 
 /**
 * @mainpage stereo-sgm
@@ -51,7 +52,7 @@ namespace sgm {
 		* @param right_pixels	A pointer stored input right image.
 		* @param dst	        Output pointer. User must allocate enough memory.
 		* @attention
-		* For performance reason, when the instance is created with inout_type == EXECUTE_INOUT_**2CUDA, output_depth_bits == 16, 
+		* For performance reason, when the instance is created with inout_type == EXECUTE_INOUT_**2CUDA, output_depth_bits == 16,
 		* you don't have to allocate dst memory yourself. It returns internal cuda pointer. You must not free the pointer.
 		*/
 		void execute(const void* left_pixels, const void* right_pixels, void** dst);
@@ -70,3 +71,5 @@ namespace sgm {
 		EXECUTE_INOUT inout_type_;
 	};
 }
+
+#endif

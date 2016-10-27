@@ -103,14 +103,10 @@ void CUeye_Camera::Enable_Event() {
 }
 
 
-int CUeye_Camera::Wait_next_image() {
-    int ret = is_WaitEvent(this->hCam_, IS_SET_EVENT_FRAME, 20);
-    if(ret==IS_SUCCESS)
-    return 1;
-    else
-    return 0;
+bool CUeye_Camera::Wait_next_image() {
+    int ret = is_WaitEvent(this->hCam_, IS_SET_EVENT_FRAME, 50);
+    return (ret==IS_SUCCESS); 
 }
-
 
 //  GET IMAGE
 // -----------------------------------------------------------------------------
@@ -668,110 +664,4 @@ void CUeye_Camera::close_camera()
 }
 
 
-/*
--------------------------------------------------------------------------------
-My own function
--------------------------------------------------------------------------------
-*/
 
-/*
-// GET IMAGE
-//-----------------------------------------------------------------------------
-cv::Mat* get_img(CUeye_Camera& cam)
-{
-  // Aacquire a single image from the camera
-  bool image_ok = false;
-  try
-  {
-    image_ok = cam.get_image();
-  }
-  catch (CUeyeCameraException & e)
-  {
-    cout << e.what () << endl;
-    return 0;
-  }
-  catch (CUeyeFeatureException & e)
-  {
-    cout << e.what () << endl;
-  }
-
-  int type;
-  if(cam.params_.img_bpp ==8) 
-	type=CV_8UC1;
-  else if(cam.params_.img_bpp ==24 || cam.params_.img_bpp==32)
-	type=CV_8UC3;
-
-  cv::Mat* image = NULL;
-
-  if(image_ok)
-  {
-    image = new cv::Mat(cam.params_.img_height, cam.params_.img_width, type);
-
-    for (int jj = 0; jj < cam.img_data_size_; ++jj)
-      image->at<unsigned char>(jj) = (unsigned char)cam.image_data_.at(jj);
-  }
-
-  return image;
-}
-*/
-
-
-// GET IMAGE for multithread
-//-----------------------------------------------------------------------------
-void get_img_thread(CUeye_Camera& cam, cv::Mat** rImage)
-{
-  // Aacquire a single image from the camera
-  bool image_ok = false;
-  try
-  {
-    image_ok = cam.get_image();
-  }
-  catch (CUeyeCameraException & e)
-  {
-    cout << e.what () << endl;
-    return;
-  }
-  catch (CUeyeFeatureException & e)
-  {
-    cout << e.what () << endl;
-  }
-
-  int type;
-  if(cam.params_.img_bpp ==8) 
-	type=CV_8UC1;
-  else if(cam.params_.img_bpp ==24 || cam.params_.img_bpp==32)
-	type=CV_8UC3;
-
-  cv::Mat* image = NULL;
-
-  if(image_ok)
-  {
-    image = new cv::Mat(cam.params_.img_height, cam.params_.img_width, type);
-
-    for (int jj = 0; jj < cam.img_data_size_; ++jj)
-      image->at<unsigned char>(jj) = (unsigned char)cam.image_data_.at(jj);
-  }
- 
-  *rImage = image;
-//std::cout <<"Address of rImage: " << &rImage << std::endl;
-  return;
-}
-
-
-
-// Capture Image for calibration
-//----------------------------------------------------
-void image_save(const cv::Mat &img1, const cv::Mat &img2){
-string str;
-static int count_f = 0;
-count_f++;
-string result;
-ostringstream convert;
-convert << count_f;
-result = convert.str();
-string filename1 = "/home/haibo/Desktop/Calib/Left/" + result + "_1.png";
-string filename2 = "/home/haibo/Desktop/Calib/Right/" + result + "_2.png";
-cv::imwrite(filename1.c_str(), img1);
-cv::imwrite(filename2.c_str(), img2);
-return;
-}

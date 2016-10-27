@@ -1,0 +1,189 @@
+#include "ueye_camera.h"
+
+/********************* my functions ****************************/
+
+// INITIALIZE CAMERA
+// -----------------------------------------------------------------------------
+bool init_camera(CUeye_Camera& cam)
+{
+  // Initialize camera
+  cout << endl << "[Camera test]: Trying to open camera " + std::to_string(cam.params_.cameraid) << endl;
+  try
+  {
+    cam.init_camera();
+  }
+  catch (CUeyeCameraException & e)
+  {
+    cout << e.what () << endl;
+    return false;
+  }
+  catch (CUeyeFeatureException & e)
+  {
+    cout << e.what () << endl;
+  }
+
+  return true;
+}
+
+// LIST AVAILABLE CAMERAS
+// -----------------------------------------------------------------------------
+bool list_cameras(CUeye_Camera& cam)
+{
+  try
+  {
+    cam.list_cameras();
+  }
+  catch (CUeyeCameraException & e)
+  {
+    cout << e.what () << endl;
+    return false;
+  }
+  catch (CUeyeFeatureException & e)
+  {
+    cout << e.what () << endl;
+  }
+  return true;
+}
+
+
+/*
+// GET IMAGE
+//-----------------------------------------------------------------------------
+cv::Mat* get_img(CUeye_Camera& cam)
+{
+  // Aacquire a single image from the camera
+  bool image_ok = false;
+  try
+  {
+    image_ok = cam.get_image();
+  }
+  catch (CUeyeCameraException & e)
+  {
+    cout << e.what () << endl;
+    return 0;
+  }
+  catch (CUeyeFeatureException & e)
+  {
+    cout << e.what () << endl;
+  }
+
+  int type;
+  if(cam.params_.img_bpp ==8) 
+	type=CV_8UC1;
+  else if(cam.params_.img_bpp ==24 || cam.params_.img_bpp==32)
+	type=CV_8UC3;
+
+  cv::Mat* image = NULL;
+
+  if(image_ok)
+  {
+    image = new cv::Mat(cam.params_.img_height, cam.params_.img_width, type);
+
+    for (int jj = 0; jj < cam.img_data_size_; ++jj)
+      image->at<unsigned char>(jj) = (unsigned char)cam.image_data_.at(jj);
+  }
+
+  return image;
+}
+*/
+
+
+// GET IMAGE for multithread
+//-----------------------------------------------------------------------------
+void get_img_thread(CUeye_Camera& cam, cv::Mat** ppImage)
+{
+  // Acquire a single image from the camera
+  bool image_ok = false;
+  try
+  {
+    image_ok = cam.get_image();
+  }
+  catch (CUeyeCameraException & e)
+  {
+    cout << e.what () << endl;
+    return;
+  }
+  catch (CUeyeFeatureException & e)
+  {
+    cout << e.what () << endl;
+  }
+
+  int type;
+  if(cam.params_.img_bpp ==8) 
+	type=CV_8UC1;
+  else if(cam.params_.img_bpp ==24 || cam.params_.img_bpp==32)
+	type=CV_8UC3;
+
+  cv::Mat* image = NULL;
+
+  if(image_ok)
+  {
+    image = new cv::Mat(cam.params_.img_height, cam.params_.img_width, type);
+
+	if (image != NULL){
+        for (int i = 0; i < cam.img_data_size_; ++i)
+            image->at<unsigned char>(i) = (unsigned char)cam.image_data_.at(i);
+    }
+  }
+ 
+  *ppImage = image;
+
+  return;
+}
+
+
+
+// Capture Image for calibration
+//----------------------------------------------------
+void image_save(const cv::Mat &img1, const cv::Mat &img2){
+string str;
+static int count_f = 0;
+count_f++;
+string result;
+ostringstream convert;
+convert << count_f;
+result = convert.str();
+string filename1 = "/home/haibo/Desktop/Calib/Left/" + result + "_1.png";
+string filename2 = "/home/haibo/Desktop/Calib/Right/" + result + "_2.png";
+cv::imwrite(filename1.c_str(), img1);
+cv::imwrite(filename2.c_str(), img2);
+return;
+}
+
+void setCameraParams(CUeye_Camera& cam){
+  static int cameraCount = 1;
+
+  cam.params_.cameraid     		=cameraCount++; // first time 1, second time 2, etc
+
+  cam.params_.exposure              =10;
+  cam.params_.img_width             =752;
+  cam.params_.img_height            =480;
+  cam.params_.img_left      		=-1;
+  cam.params_.img_top       		=-1;
+  cam.params_.fps           		=20;
+  cam.params_.param_mode      		=0;
+  cam.params_.file_str       		="";
+  cam.params_.pixel_clock   		=20;
+  cam.params_.mirror_updown  		=false;
+  cam.params_.mirror_leftright 	=false;
+
+//  ros::param::get("~image_width", ueye.params_.img_width);
+//  ros::param::get("~image_height", ueye.params_.img_height);
+//  ros::param::get("~exposure", ueye.params_.exposure);
+
+}
+
+
+
+  ueye_R.params_.cameraid    		=2;
+  ros::param::get("~image_width", ueye.params_.img_width);
+  ros::param::get("~image_height", ueye.params_.img_height);
+  ueye_R.params_.img_left   		=-1;
+  ueye_R.params_.img_top       		=-1;
+  ueye_R.params_.fps          		=20;
+  ueye_R.params_.param_mode  		=1;
+  ueye_R.params_.file_str     		="";
+  ueye_R.params_.pixel_clock    	=20;
+  ros::param::get("~exposure", ueye_R.params_.exposure);
+  ueye_R.params_.mirror_updown 		=false;
+  ueye_R.params_.mirror_leftright 	=false;
