@@ -53,11 +53,11 @@ CUDA_ADD_LIBRARY(sgm src/stereo_sgm.cpp ${DOTCU} STATIC)
 
 ADD_LIBRARY(nppc_static STATIC IMPORTED)
 SET_TARGET_PROPERTIES(nppc_static PROPERTIES
-IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/NTU-ST-UAV/stereo_gpu/lib/libnppc_static.a)
+IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/lib/libnppc_static.a)
 
 ADD_LIBRARY(nppi_static STATIC IMPORTED)
 SET_TARGET_PROPERTIES(nppi_static PROPERTIES
-IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/NTU-ST-UAV/stereo_gpu/lib/libnppi_static.a)
+IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/lib/libnppi_static.a)
 
 CUDA_ADD_EXECUTABLE(stereo_gpu_node ./src/main.cpp )
 
