@@ -2,7 +2,8 @@
 	internal.h
 */
 
-#pragma once
+#ifndef _INTERNAL_H
+#define _INTERNAL_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,7 +33,7 @@ namespace sgm {
 
 		// input: scan_scost		output: disparity
 		void winner_takes_all(const uint16_t* d_scost, uint16_t* d_left_disp, uint16_t* d_right_disp, int width, int height, int disp_size);
-		
+
 		// input: disparity			output: filtered disparity
 		void median_filter(const uint16_t* d_src, uint16_t* d_dst, void* median_filter_buffer, int width, int height);
 
@@ -51,3 +52,5 @@ namespace sgm {
 
 	}
 }
+
+#endif

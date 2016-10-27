@@ -5,6 +5,8 @@
 #include "ueye_exceptions.h"
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <opencv2/calib3d/calib3d.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 #include <boost/thread.hpp>
 
 #include <stdio.h>
@@ -24,6 +26,8 @@
 
 using namespace std;
 
+
+
 /*! \struct TUeye_config
  *  \brief It contains the main camera configuration parameters
  */
@@ -40,7 +44,6 @@ typedef struct
     string file_str; // Path to the parameters file
     int pixel_clock; // Pixel clock frequency
     double exposure; // Exposure time
-
     bool mirror_updown; // Mirror UpDown
     bool mirror_leftright; // Mirror LeftRigth
 }TUeye_config;
@@ -150,7 +153,7 @@ class CUeye_Camera
   public:
 
     TUeye_config params_;              //!< Camera parameters
-  	vector<unsigned char> image_data_; //!< Image data
+    vector<unsigned char> image_data_; //!< Image data
   	HIDS hCam_;                        //!< Camera handler.
     SENSORINFO sensor_info_;           //!< Sensor information
     int img_data_size_;                //!< Image serialized data size
@@ -158,6 +161,7 @@ class CUeye_Camera
   	bool camera_open_;                 //!< Check if the camera is open
     char* imgMem_;                     //!< Image memory
     double input_exposure; //read-in exposure time
+
     /*! \brief Object constructor
      *
      * Assigns names and initializes variables
@@ -173,10 +177,14 @@ class CUeye_Camera
      * Detect, list and print the ueye cameras connected to the PC
      */
     void list_cameras();
+
+    /*! \brief Enable_Event, check for new image
+     */
     void Enable_Event();
 
-
-    int Wait_next_image();
+    /*! \brief wait until next image arrives
+     */
+    bool Wait_next_image();
 
     /*! \brief Initialize camera to take images
      *
@@ -222,12 +230,20 @@ class CUeye_Camera
      *
      * If 'exp' is 0 means an internal frame rate change due to other functions
      */
-    int set_hardware_gain(int gain);
-    int get_hardware_gain();
-    int set_HW_gain_factor(int gain_factor);
-    //int query_gain_factor();
     void set_exposure(const double& exp);
+
     void get_Exposure();
+
+    int set_hardware_gain(int gain);
+
+    int get_hardware_gain();
+
+    int set_HW_gain_factor(int gain_factor);
+
+    //int query_gain_factor();
+
+
+
     /*! \brief Set mirror
      *
      * Set camera mirroring, Updown and Leftright
@@ -249,11 +265,5 @@ class CUeye_Camera
     void close_camera();
 };
 
-// My own function
-//----------------------------------------------------------
-//cv::Mat* get_img(CUeye_Camera& cam);
-void get_img_thread(CUeye_Camera& cam, cv::Mat** rImage);
-//bool init_camera();
-//bool list_cameras();
-void image_save(const cv::Mat &img1, const cv::Mat &img2);
+
 #endif
