@@ -1,4 +1,4 @@
-#include "ueye_camera.h"
+#include "ueye2/ueye_camera.h"
 
 /********************* my functions ****************************/
 

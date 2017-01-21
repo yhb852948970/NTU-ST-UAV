@@ -1,6 +1,6 @@
 <launch>
 
-	<node pkg="ueye" name="ueye_camera_driver" type="ueye_node" required="true" output="screen">
+	<node pkg="ueye2" name="ueye_camera_driver" type="ueye_node" required="true" output="screen">
 		<param name="exposure" value="10" />
 		<param name="image_width" value="752" />
 		<param name="image_heigth" value="480" />

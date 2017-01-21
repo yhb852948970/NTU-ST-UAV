@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(ueye)
+project(ueye2)
 
 ##### comment this lit to use OpenCV 2
 #set (OpenCV_DIR /usr/local/opencv-3.1.0/share/OpenCV)
@@ -12,7 +12,7 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 SET(CMAKE_BUILD_TYPE debug)
 
 #find the cv support and set HAVE_OPENCV_H for the conditional compilation
-FIND_PACKAGE(OpenCV REQUIRED core highgui calib3d)
+FIND_PACKAGE(OpenCV REQUIRED core highgui calib3d imgproc)
 
 if (OpenCV_FOUND)
   if (${OpenCV_VERSION_MAJOR} GREATER 1)
@@ -114,6 +114,6 @@ if(NOT UEYE_LIBRARY)
 endif()
 
 include_directories(include ${catkin_INCLUDE_DIRS})
-add_executable(ueye_node src/ueye_node.cpp src/my_ueye_functions.cpp)
-target_link_libraries(ueye_node ${catkin_LIBRARIES} ${OpenCV_LIBS} ueye_camera)
+add_executable(ueye2_node src/ueye_node.cpp src/my_ueye_functions.cpp)
+target_link_libraries(ueye2_node ${catkin_LIBRARIES} ${OpenCV_LIBS} ueye_camera)
 

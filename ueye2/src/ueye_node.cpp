@@ -2,10 +2,10 @@
  *  new ueye camera drive to publish left and right images separately
 !*/
 
-#include "ueye_camera.h"
-#include "ueye_exceptions.h"
-#include "exceptions.h"
-#include "my_ueye_functions.h"
+#include "ueye2/ueye_camera.h"
+#include "ueye2/ueye_exceptions.h"
+#include "ueye2/exceptions.h"
+#include "ueye2/my_ueye_functions.h"
 
 #include <ros/ros.h>
 #include <image_transport/image_transport.h>

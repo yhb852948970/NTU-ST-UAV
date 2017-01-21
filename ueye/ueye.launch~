@@ -1,7 +1,0 @@
-<launch>
-
-	< param name="exposure" value="10" />
-	< param name="ros_loop_rate" value="20" />
-
-
-</launch>
