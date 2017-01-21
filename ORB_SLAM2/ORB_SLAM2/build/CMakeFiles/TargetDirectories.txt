@@ -1,0 +1,2 @@
+/home/haibo/catkin_ws/src/ST_UAV_Phase2/ORB_SLAM2/ORB_SLAM2/build/CMakeFiles/ORB_SLAM2.dir
+/home/haibo/catkin_ws/src/ST_UAV_Phase2/ORB_SLAM2/ORB_SLAM2/build/CMakeFiles/stereo_kitti.dir

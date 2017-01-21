@@ -1,0 +1,40 @@
+Stereo Example with KITTI Dataset
+
+Execute the following command. Change `KITTIX.yaml`to KITTI00-02.yaml, KITTI03.yaml or KITTI04-12.yaml for sequence 0 to 2, 3, and 4 to 12 respectively. Change `PATH_TO_DATASET_FOLDER` to the uncompressed dataset folder. Change `SEQUENCE_NUMBER` to 00, 01, 02,.., 11. 
+
+
+cd ~/catkin_ws/src/ST_UAV_Phase2/ORB_SLAM2/ORB_SLAM2
+
+./Stereo_SLAM/stereo_kitti Vocabulary/ORBvoc.txt Stereo_SLAM/KITTI00.yaml /home/haibo/dataset_KITTI/sequences/00
+
+
+ROS Examples
+
+### Building the ORB-SLAM 
+
+mkdir build
+cd build
+cmake .. -DROS_BUILD_TYPE=Release
+make -j
+
+### Running Stereo Node
+for stereo ORB-SLAM, the topics required are:
+/camera/left/image_raw 
+/camera/right/image_raw
+
+rosrun ORB_SLAM2 NODE_NAME PATH_TO_VOCABULARY PATH_TO_SETTINGS_FILE ONLINE_RECTIFICATION
+  
+
+### Running default ROS example
+
+**Example**: Download a rosbag (e.g. V1_01_easy.bag) from the EuRoC dataset (http://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets). 
+
+roscore
+  
+rosrun ORB_SLAM2 ORB_SLAM2_node ORB_SLAM2/Vocabulary/ORBvoc.txt ORB_SLAM2/Stereo_SLAM/EuRoC.yaml true	 
+  
+rosbag play --pause /home/haibo/rosbag_data/V1_01_easy.bag /cam0/image_raw:=/camera/left/image_raw /cam1/image_raw:=/camera/right/image_raw
+
+
+
+### run in ROS with my own setting file 
